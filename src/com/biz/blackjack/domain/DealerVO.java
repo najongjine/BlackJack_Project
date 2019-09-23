@@ -1,5 +1,6 @@
 package com.biz.blackjack.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DealerVO {
@@ -10,6 +11,7 @@ public class DealerVO {
 	public DealerVO() {
 		super();
 		// TODO Auto-generated constructor stub
+		cardList1=new ArrayList<CardVO>();
 	}
 	public DealerVO(String name, int cardSetValue, List<CardVO> cardList1) {
 		super();

@@ -12,7 +12,7 @@ public class BlackJackServiceImp {
 	private static DealerVO dealerVO=null;
 	private static PlayerVO playerVO=null;
 	private static List<CardVO> cardLists=null;
-	private int lastCardIndex=51;
+	private int lastCardIndex=0;
 	
 	public BlackJackServiceImp() {
 		super();
@@ -133,7 +133,7 @@ public class BlackJackServiceImp {
 		cardLists.add(vo);
 		vo=new CardVO("DiaAce", 1);
 		cardLists.add(vo);
-		
+		lastCardIndex=cardLists.size()-1;
 		Collections.shuffle(cardLists);
 		
 		playerVO=new PlayerVO();
@@ -141,6 +141,7 @@ public class BlackJackServiceImp {
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		calculate(playerVO);
+		
 		dealerVO=new DealerVO();
 		dealerVO.setName("Dealer");
 		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
@@ -148,9 +149,21 @@ public class BlackJackServiceImp {
 		calculate(dealerVO);
 		checkForceHit_Dealer();
 	}
-	@Override
-	public String toString() {
-		return "BlackJackServiceImp []";
+	public String toStringPlayer() {
+		String playerInfo=playerVO.getName()+"의 카드[";
+		for(CardVO cardVO:playerVO.getCardList1()) {
+			playerInfo+=String.format("%s, ", cardVO.getName());
+		}
+		playerInfo+="]";
+		return playerInfo;
+	}
+	public String toStringDealer() {
+		String playerInfo=dealerVO.getName()+"의 카드[";
+		for(CardVO cardVO:dealerVO.getCardList1()) {
+			playerInfo+=String.format("%s, ", cardVO.getName());
+		}
+		playerInfo+="]";
+		return playerInfo;
 	}
 	public static DealerVO getDealerVO() {
 		return dealerVO;
@@ -203,16 +216,16 @@ public class BlackJackServiceImp {
 	public void hit(PlayerVO playerVO) {
 		if(checkIsCardListsEmpty()) return;
 		
-		playerVO.getCardList1().add(cardLists.get(lastCardIndex));
-		cardLists.remove(lastCardIndex--);
+		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
+		//cardLists.remove(lastCardIndex--);
 		calculate(playerVO);
 			
 	}//end hit
 	public void hit(DealerVO dealerVO) {
 		if(checkIsCardListsEmpty()) return;
 		
-		dealerVO.getCardList1().add(cardLists.get(lastCardIndex));
-		cardLists.remove(lastCardIndex--);
+		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
+		//cardLists.remove(lastCardIndex--);
 		calculate(dealerVO);
 			
 	}//end hit
@@ -224,14 +237,16 @@ public class BlackJackServiceImp {
 		return false;
 	}//end check card empty
 	public boolean checkIsBust() {
+		if(playerVO==null) return false;
 		if(playerVO.getCardSetValue()>21) {
 			playerVO.setbBust(true);
 			//System.out.printf("%s 는 총 카드 값이 21을 넘어서 지셨습니다.\n",playerVO.getName());
 			//System.out.printf("%s 의 승리입니다.\n",dealerVO.getName());
 			return true;
 		}
+		if(dealerVO==null) return false;
 		if(dealerVO.getCardSetValue()>21) {
-			playerVO.setbBust(true);
+			dealerVO.setbBust(true);
 			//System.out.printf("%s 는 총 카드 값이 21을 넘어서 지셨습니다.\n",dealerVO.getName());
 			//System.out.printf("%s 의 승리입니다.\n",playerVO.getName());
 			return true;
@@ -248,6 +263,7 @@ public class BlackJackServiceImp {
 		}
 		hit(dealerVO);
 		calculate(dealerVO);
+		System.out.println("딜러가 카드 한장을 뽑았습니다.");
 	}//end forcehit
 	public void checkWinner() {
 		if(playerVO.isbBust() && dealerVO.isbBust()) {
@@ -277,6 +293,8 @@ public class BlackJackServiceImp {
 		}
 	}//end check winner
 	public boolean open() {
+		toStringDealer();
+		toStringPlayer();
 		checkWinner();
 		return true;
 		
