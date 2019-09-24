@@ -22,6 +22,23 @@ public class BlackJackServiceImp {
 		super();
 		// TODO Auto-generated constructor stub
 		cardLists=new ArrayList<CardVO>();
+		fdlVO=new TreeMap<Integer, FakeDeepLearningVO>();
+		playerVO=new PlayerVO();
+		dealerVO=new DealerVO();
+		init();
+		FakeDeepLearningService.initFDL();
+	}
+	public void init() {
+		playerVO.getCardList1().clear();
+		dealerVO.getCardList1().clear();
+		cardLists.clear();
+		playerVO.setbBust(false);
+		playerVO.setCardSetValue(0);
+		playerVO.setbLose(false);
+		dealerVO.setbBust(false);
+		dealerVO.setbShouldHit(true);
+		dealerVO.setCardSetValue(0);
+		
 		CardVO vo;
 		vo=new CardVO("Spade2", 2);
 		cardLists.add(vo);
@@ -133,16 +150,11 @@ public class BlackJackServiceImp {
 		lastCardIndex=cardLists.size()-1;
 		Collections.shuffle(cardLists);
 		
-		fdlVO=new TreeMap<Integer, FakeDeepLearningVO>();
-		FakeDeepLearningService.initFDL();
-		
-		playerVO=new PlayerVO();
 		playerVO.setName("Me");
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		calculate(playerVO);
 		
-		dealerVO=new DealerVO();
 		dealerVO.setName("Dealer");
 		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
@@ -273,7 +285,7 @@ public class BlackJackServiceImp {
 		System.out.println("딜러가 카드 한장을 뽑았습니다.");
 	}//end forcehit
 	public void checkWinner() {
-		if(playerVO.isbBust() && dealerVO.isbBust()) {
+		if(playerVO.isbBust()==true && dealerVO.isbBust()==true) {
 			System.out.println("무승부 입니다.");
 			playerVO.setbLose(false);
 			return;

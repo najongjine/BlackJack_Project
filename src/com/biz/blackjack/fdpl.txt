@@ -1,0 +1,8 @@
+12: safe:25 lose:36
+
+13: safe:24 lose:31
+
+14: safe:24 lose:30
+
+15: safe:18 lose:31
+
