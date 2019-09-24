@@ -7,6 +7,7 @@ public class DealerVO {
 	private String name="";
 	private int cardSetValue=0;
 	private boolean bBust=false;
+	private boolean bShouldHit=true;
 	private List<CardVO> cardList1=null;
 	public DealerVO() {
 		super();
@@ -24,6 +25,12 @@ public class DealerVO {
 		return "DealerVO [name=" + name + ", cardSetValue=" + cardSetValue + ", cardList1=" + cardList1 + "]";
 	}
 	
+	public boolean isbShouldHit() {
+		return bShouldHit;
+	}
+	public void setbShouldHit(boolean bShouldHit) {
+		this.bShouldHit = bShouldHit;
+	}
 	public boolean isbBust() {
 		return bBust;
 	}

@@ -1,6 +1,8 @@
-package com.biz.blackjack.service;
+package com.biz.blackjack;
 
 import java.util.Scanner;
+
+import com.biz.blackjack.service.BlackJackServiceImp;
 
 public class BlackJackEx01 {
 
@@ -11,7 +13,7 @@ public class BlackJackEx01 {
 		Scanner scan=new Scanner(System.in);
 		
 		System.out.println(bs.toStringPlayer());
-		for(int i=0,turnOfWhichPerson=0;;turnOfWhichPerson=(++i)%maxPlayerNum+1) {//+1은 딜러 포함
+		for(int i=0,turnOfWhichPerson=0;;turnOfWhichPerson=(++i)%(maxPlayerNum+1)) {//+1은 딜러 포함
 			if(turnOfWhichPerson==1) {//dealer turn
 				System.out.println();
 				System.out.println("딜러의 턴 입니다.");

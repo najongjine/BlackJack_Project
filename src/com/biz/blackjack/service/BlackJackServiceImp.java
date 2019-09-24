@@ -3,23 +3,26 @@ package com.biz.blackjack.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.biz.blackjack.domain.CardVO;
 import com.biz.blackjack.domain.DealerVO;
+import com.biz.blackjack.domain.FakeDeepLearningVO;
 import com.biz.blackjack.domain.PlayerVO;
 
 public class BlackJackServiceImp {
 	private static DealerVO dealerVO=null;
 	private static PlayerVO playerVO=null;
 	private static List<CardVO> cardLists=null;
+	private static Map<Integer, FakeDeepLearningVO> fdlVO;
 	private int lastCardIndex=0;
 	
 	public BlackJackServiceImp() {
 		super();
 		// TODO Auto-generated constructor stub
 		cardLists=new ArrayList<CardVO>();
-		CardVO vo=new CardVO("Spade1", 1);
-		cardLists.add(vo);
+		CardVO vo;
 		vo=new CardVO("Spade2", 2);
 		cardLists.add(vo);
 		vo=new CardVO("Spade3", 3);
@@ -47,8 +50,6 @@ public class BlackJackServiceImp {
 		vo=new CardVO("SpadeAce", 1);
 		cardLists.add(vo);
 		
-		vo=new CardVO("Clover1", 1);
-		cardLists.add(vo);
 		vo=new CardVO("Clover2", 2);
 		cardLists.add(vo);
 		vo=new CardVO("Clover3", 3);
@@ -76,8 +77,6 @@ public class BlackJackServiceImp {
 		vo=new CardVO("CloverAce", 1);
 		cardLists.add(vo);
 		
-		vo=new CardVO("Heart1", 1);
-		cardLists.add(vo);
 		vo=new CardVO("Heart2", 2);
 		cardLists.add(vo);
 		vo=new CardVO("Heart3", 3);
@@ -105,8 +104,6 @@ public class BlackJackServiceImp {
 		vo=new CardVO("HeartAce", 1);
 		cardLists.add(vo);
 		
-		vo=new CardVO("Dia1", 1);
-		cardLists.add(vo);
 		vo=new CardVO("Dia2", 2);
 		cardLists.add(vo);
 		vo=new CardVO("Dia3", 3);
@@ -136,6 +133,9 @@ public class BlackJackServiceImp {
 		lastCardIndex=cardLists.size()-1;
 		Collections.shuffle(cardLists);
 		
+		fdlVO=new TreeMap<Integer, FakeDeepLearningVO>();
+		FakeDeepLearningService.initFDL();
+		
 		playerVO=new PlayerVO();
 		playerVO.setName("Me");
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
@@ -164,6 +164,13 @@ public class BlackJackServiceImp {
 		}
 		playerInfo+="]";
 		return playerInfo;
+	}
+	
+	public static Map<Integer, FakeDeepLearningVO> getFdlVO() {
+		return fdlVO;
+	}
+	public static void setFdlVO(Map<Integer, FakeDeepLearningVO> fdlVO) {
+		BlackJackServiceImp.fdlVO = fdlVO;
 	}
 	public static DealerVO getDealerVO() {
 		return dealerVO;
@@ -214,7 +221,7 @@ public class BlackJackServiceImp {
 		
 	}
 	public void hit(PlayerVO playerVO) {
-		if(checkIsCardListsEmpty()) return;
+		if(lastCardIndex<=0) return;
 		
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		//cardLists.remove(lastCardIndex--);
@@ -268,24 +275,29 @@ public class BlackJackServiceImp {
 	public void checkWinner() {
 		if(playerVO.isbBust() && dealerVO.isbBust()) {
 			System.out.println("무승부 입니다.");
+			playerVO.setbLose(false);
 			return;
 		}
 		else if(playerVO.isbBust()==true && dealerVO.isbBust()==false) {
 			System.out.println("딜러의 승 입니다.");
+			playerVO.setbLose(true);
 			return;
 		}
 		else if(playerVO.isbBust()==false && dealerVO.isbBust()==true) {
 			System.out.printf("%s 의 승 입니다.",playerVO.getName());
+			playerVO.setbLose(false);
 			return;
 		}
 		int playerValDiff=21-playerVO.getCardSetValue();
 		int dealderVallDiff=21-dealerVO.getCardSetValue();
 		if(playerValDiff<dealderVallDiff) {
 			System.out.printf("%s 의 승 입니다.",playerVO.getName());
+			playerVO.setbLose(false);
 			return;
 		}
 		else if(playerValDiff>dealderVallDiff) {
 			System.out.println("딜러의 승 입니다.");
+			playerVO.setbLose(true);
 			return;
 		}
 		else {
@@ -299,4 +311,12 @@ public class BlackJackServiceImp {
 		return true;
 		
 	}//end open
+	public boolean decideAI_V1() {
+		if(dealerVO.getCardSetValue()>16) {
+			dealerVO.setbShouldHit(false);
+			return false;
+		}
+		hit(dealerVO);
+		return true;
+	}
 }

@@ -7,6 +7,7 @@ public class PlayerVO {
 	private String name="";
 	private int cardSetValue=0;
 	private boolean bBust=false;
+	private boolean bLose=false;
 	private List<CardVO> cardList1=null;
 	
 	public PlayerVO() {
@@ -26,6 +27,12 @@ public class PlayerVO {
 		return "PlayerVO [name=" + name + ", cardSetValue=" + cardSetValue + ", cardList1=" + cardList1 + "]";
 	}
 	
+	public boolean isbLose() {
+		return bLose;
+	}
+	public void setbLose(boolean bLose) {
+		this.bLose = bLose;
+	}
 	public boolean isbBust() {
 		return bBust;
 	}
