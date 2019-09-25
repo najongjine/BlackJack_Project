@@ -24,7 +24,7 @@ public class BlackJackEx02 {
 		int maxPlayerNum=1;
 		Scanner scan=new Scanner(System.in);
 		
-		int max_loop=9_999_999;
+		int max_loop=99_999_999;
 		for(int i=0,turnOfWhichPerson=0;i<max_loop;turnOfWhichPerson=(++i)%(maxPlayerNum+1)) {//+1은 딜러 포함
 			bs.init();
 			if(turnOfWhichPerson==1) {//dealer turn

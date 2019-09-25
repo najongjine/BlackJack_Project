@@ -247,7 +247,7 @@ public class BlackJackServiceImp {
 		//cardLists.remove(lastCardIndex--);
 		calculate(this.playerVO);
 		checkIsBust();
-		System.out.println(toStringPlayer());
+		//System.out.println(toStringPlayer());
 			
 	}//end hit
 	public void hit(PlayerVO playerVO, boolean bVar) {
@@ -299,6 +299,8 @@ public class BlackJackServiceImp {
 		
 	}//end stay
 	public void checkForceHit_Dealer() {
+		calculate(dealerVO);
+		calculate(playerVO);
 		if(dealerVO.getCardSetValue()>16) {
 			return;
 		}
@@ -392,6 +394,8 @@ public class BlackJackServiceImp {
 		return false;
 	}
 	public boolean decideAI_V1(PlayerVO playerVO) {
+		calculate(dealerVO);
+		calculate(this.playerVO);
 		if(this.playerVO.getCardSetValue()>16) {
 			this.playerVO.setbShouldHit(false);
 			return false;

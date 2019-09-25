@@ -13,10 +13,9 @@ public class BlackJackEx01 {
 		Scanner scan=new Scanner(System.in);
 		
 		int turnOfWhichPerson=0;
-		//turnOfWhichPerson=(++i)%(maxPlayerNum+1)
-		for(int i=1;;i++) {//+1은 딜러 포함
+		for(int i=0;;i++) {//+1은 딜러 포함
 			turnOfWhichPerson=i%(maxPlayerNum+1);
-			if(turnOfWhichPerson==1) {//dealer turn
+			if(turnOfWhichPerson==0) {//dealer turn
 				System.out.println();
 				System.out.println("딜러의 턴 입니다.");
 				bs.checkForceHit_Dealer();
