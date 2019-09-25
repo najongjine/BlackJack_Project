@@ -1,9 +1,13 @@
 package com.biz.blackjack.service;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import com.biz.blackjack.domain.CardVO;
@@ -17,8 +21,9 @@ public class BlackJackServiceImp {
 	private static List<CardVO> cardLists=null;
 	private static Map<Integer, FakeDeepLearningVO> fdlVO;
 	private int lastCardIndex=0;
+	public static String fdlFile="src/com/biz/blackjack/fdpl.txt";
 	
-	public BlackJackServiceImp() {
+	public BlackJackServiceImp() throws Exception {
 		super();
 		// TODO Auto-generated constructor stub
 		cardLists=new ArrayList<CardVO>();
@@ -27,6 +32,7 @@ public class BlackJackServiceImp {
 		dealerVO=new DealerVO();
 		init();
 		FakeDeepLearningService.initFDL();
+		readFDL_Data();
 	}
 	public void init() {
 		playerVO.getCardList1().clear();
@@ -167,6 +173,7 @@ public class BlackJackServiceImp {
 			playerInfo+=String.format("%s, ", cardVO.getName());
 		}
 		playerInfo+="]";
+		playerInfo+=" "+this.playerVO.getCardSetValue();
 		return playerInfo;
 	}
 	public String toStringDealer() {
@@ -175,6 +182,7 @@ public class BlackJackServiceImp {
 			playerInfo+=String.format("%s, ", cardVO.getName());
 		}
 		playerInfo+="]";
+		playerInfo+=" "+this.dealerVO.getCardSetValue();
 		return playerInfo;
 	}
 	
@@ -203,49 +211,63 @@ public class BlackJackServiceImp {
 		BlackJackServiceImp.cardLists = cardLists;
 	}
 	
-	public void calculate(PlayerVO PlayerVO) {
+	public void calculate(PlayerVO playerVO) {
 		int _value1=0;
 		
-		if(PlayerVO.getCardList1().size()<=0) {
-			System.out.printf("플레이어 %s는 아직 아무 카드도 가지고 있지 않습니다\n",PlayerVO.getName());
+		if(this.playerVO.getCardList1().size()<=0) {
+			System.out.printf("플레이어 %s는 아직 아무 카드도 가지고 있지 않습니다\n",this.playerVO.getName());
 			return;
 		}
 		
-		for(int i=0;i<PlayerVO.getCardList1().size();i++) {
-			_value1+=PlayerVO.getCardList1().get(i).getValue();
+		for(int i=0;i<this.playerVO.getCardList1().size();i++) {
+			_value1+=this.playerVO.getCardList1().get(i).getValue();
 		}
-		PlayerVO.setCardSetValue(_value1);
+		this.playerVO.setCardSetValue(_value1);
 		checkIsBust();
 	}
 	public void calculate(DealerVO dealerVO) {
 		int _value1=0;
 		
-		if(dealerVO.getCardList1().size()<=0) {
+		if(this.dealerVO.getCardList1().size()<=0) {
 			System.out.printf("플레이어 %s는 아직 아무 카드도 가지고 있지 않습니다\n",dealerVO.getName());
 			return;
 		}
 		
-		for(int i=0;i<dealerVO.getCardList1().size();i++) {
-			_value1+=dealerVO.getCardList1().get(i).getValue();
+		for(int i=0;i<this.dealerVO.getCardList1().size();i++) {
+			_value1+=this.dealerVO.getCardList1().get(i).getValue();
 		}
-		dealerVO.setCardSetValue(_value1);
+		this.dealerVO.setCardSetValue(_value1);
 		checkIsBust();
 		
 	}
 	public void hit(PlayerVO playerVO) {
 		if(lastCardIndex<=0) return;
 		
-		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
+		this.playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		//cardLists.remove(lastCardIndex--);
-		calculate(playerVO);
+		calculate(this.playerVO);
+		checkIsBust();
+		System.out.println(toStringPlayer());
+			
+	}//end hit
+	public void hit(PlayerVO playerVO, boolean bVar) {
+		if(lastCardIndex<=0) return;
+		
+		this.playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
+		//cardLists.remove(lastCardIndex--);
+		calculate(this.playerVO);
+		checkIsBust();
+		int lastIndex=this.playerVO.getCardList1().size()-1;
+		FakeDeepLearningService.processFDPL(this.playerVO.getCardSetValue()-this.playerVO.getCardList1().get(lastIndex).getValue());
+		System.out.println(toStringPlayer());
 			
 	}//end hit
 	public void hit(DealerVO dealerVO) {
 		if(checkIsCardListsEmpty()) return;
 		
-		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
-		//cardLists.remove(lastCardIndex--);
-		calculate(dealerVO);
+		this.dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
+		calculate(this.dealerVO);
+		checkIsBust();
 			
 	}//end hit
 	public boolean checkIsCardListsEmpty() {
@@ -317,18 +339,101 @@ public class BlackJackServiceImp {
 		}
 	}//end check winner
 	public boolean open() {
-		toStringDealer();
-		toStringPlayer();
+		System.out.println(toStringDealer());
+		System.out.println(toStringPlayer());
 		checkWinner();
 		return true;
 		
 	}//end open
-	public boolean decideAI_V1() {
-		if(dealerVO.getCardSetValue()>16) {
-			dealerVO.setbShouldHit(false);
+	public boolean decideAI_V1(DealerVO dealerVO) {
+		if(this.dealerVO.getCardSetValue()>=16) {
+			this.dealerVO.setbShouldHit(false);
 			return false;
 		}
-		hit(dealerVO);
-		return true;
+		if(this.dealerVO.getCardSetValue()<=11) {
+			hit(this.dealerVO);
+			return true;
+		}
+		int key=this.dealerVO.getCardSetValue();
+		if(key>12 && key <16) {
+			int _lose=fdlVO.get(key).getLose();
+			int _safe=fdlVO.get(key).getSafe();
+			if(_safe>=_lose) {
+				hit(this.dealerVO);
+				return true;
+			}
+		}
+		return false;
+	}
+	public boolean decideAI_V2(DealerVO dealerVO) {
+		calculate(dealerVO);
+		calculate(playerVO);
+		if(this.dealerVO.getCardSetValue()>=16) {
+			this.dealerVO.setbShouldHit(false);
+			return false;
+		}
+		if(this.dealerVO.getCardSetValue()<=11) {
+			hit(this.dealerVO);
+			return true;
+		}
+		else if(this.dealerVO.getCardSetValue()<playerVO.getCardSetValue() && dealerVO.getCardSetValue()<21){
+			hit(this.dealerVO);
+			return true;
+		}
+		int key=this.dealerVO.getCardSetValue();
+		if(key>12 && key <16) {
+			int _lose=fdlVO.get(key).getLose();
+			int _safe=fdlVO.get(key).getSafe();
+			if(_safe>=_lose||(this.dealerVO.getCardSetValue()<playerVO.getCardSetValue() && dealerVO.getCardSetValue()<21)) {
+				hit(this.dealerVO);
+				return true;
+			}
+		}
+		return false;
+	}
+	public boolean decideAI_V1(PlayerVO playerVO) {
+		if(this.playerVO.getCardSetValue()>16) {
+			this.playerVO.setbShouldHit(false);
+			return false;
+		}
+		if(this.playerVO.getCardSetValue()<=11) {
+			this.playerVO.setbShouldHit(true);
+			hit(this.playerVO,true);
+			return true;
+		}
+		//카드값 확인후 버스트 아니면 또 힛
+		if(this.playerVO.isbBust()==false) {
+			hit(this.playerVO,true);
+			return true;
+		}
+		return false;
+	}
+	public boolean cheatAI(DealerVO dealerVO) {
+		if(this.dealerVO.getCardSetValue()>=21) return false;
+		if(this.dealerVO.getCardSetValue()<21) {
+			if(this.dealerVO.getCardSetValue()+cardLists.get(lastCardIndex).getValue()<=21) {
+				hit(this.dealerVO);
+				return true;
+			}
+		}
+		return false;
+	}
+	public void readFDL_Data() throws Exception {
+		Set<Integer> keys=fdlVO.keySet();
+		FileReader fr=new FileReader(fdlFile);
+		BufferedReader buffer=new BufferedReader(fr);
+		while(true) {
+			String reader=buffer.readLine();
+			if(reader==null) break;
+			String[] _str=reader.split(":");
+			int _value=Integer.valueOf(_str[0]);
+			int _safe=Integer.valueOf(_str[1]);
+			int _lose=Integer.valueOf(_str[2]);
+			fdlVO.get(_value).setLose(_lose);
+			fdlVO.get(_value).setSafe(_safe);
+		}
+		buffer.close();
+		fr.close();
+		//System.out.println(fdlVO.toString());
 	}
 }

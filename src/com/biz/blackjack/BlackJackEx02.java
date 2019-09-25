@@ -13,7 +13,7 @@ import com.biz.blackjack.service.FakeDeepLearningService;
 
 public class BlackJackEx02 {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		String file="src/com/biz/blackjack/fdpl.txt";
 		FileWriter fileWriter;
@@ -24,15 +24,14 @@ public class BlackJackEx02 {
 		int maxPlayerNum=1;
 		Scanner scan=new Scanner(System.in);
 		
-		int max_loop=Integer.MAX_VALUE/2;
-		System.out.println(bs.toStringPlayer());
+		int max_loop=9_999_999;
 		for(int i=0,turnOfWhichPerson=0;i<max_loop;turnOfWhichPerson=(++i)%(maxPlayerNum+1)) {//+1은 딜러 포함
 			bs.init();
 			if(turnOfWhichPerson==1) {//dealer turn
 				System.out.println();
 				System.out.println("딜러의 턴 입니다.");
 				bs.checkForceHit_Dealer();
-				while(bs.decideAI_V1()) {
+				while(bs.cheatAI(BlackJackServiceImp.getDealerVO())) {
 					continue;
 				}
 				System.out.println("딜러의 턴이 끝났습니다.");
@@ -41,14 +40,10 @@ public class BlackJackEx02 {
 			else {//player turn
 				System.out.println();
 				System.out.printf("%s 의 턴입니다.",BlackJackServiceImp.getPlayerVO().getName());
-				while(true) {
-					if(BlackJackServiceImp.getPlayerVO().getCardSetValue()>11) break;
-					bs.hit(BlackJackServiceImp.getPlayerVO());
+				while(bs.decideAI_V1(BlackJackServiceImp.getPlayerVO())){
+					continue;
 				}
-				bs.hit(BlackJackServiceImp.getPlayerVO());
 				bs.open();
-				int lastIndex=BlackJackServiceImp.getPlayerVO().getCardList1().size()-1;
-				fdlS.processFDPL(BlackJackServiceImp.getPlayerVO().getCardSetValue()-BlackJackServiceImp.getPlayerVO().getCardList1().get(lastIndex).getValue());
 			}
 		}
 		Set<Integer> keys =BlackJackServiceImp.getFdlVO().keySet();
@@ -57,7 +52,7 @@ public class BlackJackEx02 {
 			printWriter=new PrintWriter(fileWriter);
 			for(int key:keys) {
 				System.out.printf("%d: safe:%d lose:%d\n",BlackJackServiceImp.getFdlVO().get(key).getValue(),BlackJackServiceImp.getFdlVO().get(key).getSafe(),BlackJackServiceImp.getFdlVO().get(key).getLose());
-				String _str=String.format("%d: safe:%d lose:%d",BlackJackServiceImp.getFdlVO().get(key).getValue(),BlackJackServiceImp.getFdlVO().get(key).getSafe(),BlackJackServiceImp.getFdlVO().get(key).getLose());
+				String _str=String.format("%d:%d:%d",BlackJackServiceImp.getFdlVO().get(key).getValue(),BlackJackServiceImp.getFdlVO().get(key).getSafe(),BlackJackServiceImp.getFdlVO().get(key).getLose());
 				printWriter.println(_str);
 				printWriter.flush();
 			}

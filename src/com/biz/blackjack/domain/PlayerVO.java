@@ -8,6 +8,7 @@ public class PlayerVO {
 	private int cardSetValue=0;
 	private boolean bBust=false;
 	private boolean bLose=false;
+	private boolean bShouldHit=true;
 	private List<CardVO> cardList1=null;
 	
 	public PlayerVO() {
@@ -27,6 +28,12 @@ public class PlayerVO {
 		return "PlayerVO [name=" + name + ", cardSetValue=" + cardSetValue + ", cardList1=" + cardList1 + "]";
 	}
 	
+	public boolean isbShouldHit() {
+		return bShouldHit;
+	}
+	public void setbShouldHit(boolean bShouldHit) {
+		this.bShouldHit = bShouldHit;
+	}
 	public boolean isbLose() {
 		return bLose;
 	}
