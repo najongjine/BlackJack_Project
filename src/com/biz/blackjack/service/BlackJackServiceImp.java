@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import com.biz.blackjack.domain.BlackJackVars;
 import com.biz.blackjack.domain.CardVO;
 import com.biz.blackjack.domain.DealerVO;
 import com.biz.blackjack.domain.FakeDeepLearningVO;
@@ -296,7 +297,7 @@ public class BlackJackServiceImp {
 		
 	}//end checkbust
 	public void stay() {
-		
+		BlackJackVars.intStay++;
 	}//end stay
 	public void checkForceHit_Dealer() {
 		calculate(dealerVO);
@@ -309,31 +310,37 @@ public class BlackJackServiceImp {
 		System.out.println("딜러가 카드 한장을 뽑았습니다.");
 	}//end forcehit
 	public void checkWinner() {
-		if(playerVO.isbBust()==true && dealerVO.isbBust()==true) {
+		if(playerVO.getCardSetValue()>21 && dealerVO.getCardSetValue()>21) {
 			System.out.println("무승부 입니다.");
 			playerVO.setbLose(false);
 			return;
 		}
-		else if(playerVO.isbBust()==true && dealerVO.isbBust()==false) {
+		else if(playerVO.getCardSetValue()>21 && dealerVO.getCardSetValue()<22) {
 			System.out.println("딜러의 승 입니다.");
 			playerVO.setbLose(true);
+			if(dealerVO.getIntNumOfLost()<0) return;
+			dealerVO.setIntNumOfLost(dealerVO.getIntNumOfLost()-1);
 			return;
 		}
-		else if(playerVO.isbBust()==false && dealerVO.isbBust()==true) {
-			System.out.printf("%s 의 승 입니다.",playerVO.getName());
+		else if(playerVO.getCardSetValue()<22 && dealerVO.getCardSetValue()>21) {
+			System.out.printf("%s 의 승 입니다.\n",playerVO.getName());
 			playerVO.setbLose(false);
+			dealerVO.setIntNumOfLost(dealerVO.getIntNumOfLost()+1);
 			return;
 		}
 		int playerValDiff=21-playerVO.getCardSetValue();
 		int dealderVallDiff=21-dealerVO.getCardSetValue();
 		if(playerValDiff<dealderVallDiff) {
-			System.out.printf("%s 의 승 입니다.",playerVO.getName());
+			System.out.printf("%s 의 승 입니다.\n",playerVO.getName());
 			playerVO.setbLose(false);
+			dealerVO.setIntNumOfLost(dealerVO.getIntNumOfLost()+1);
 			return;
 		}
 		else if(playerValDiff>dealderVallDiff) {
 			System.out.println("딜러의 승 입니다.");
 			playerVO.setbLose(true);
+			if(dealerVO.getIntNumOfLost()<0) return;
+			dealerVO.setIntNumOfLost(dealerVO.getIntNumOfLost()-1);
 			return;
 		}
 		else {
@@ -341,13 +348,22 @@ public class BlackJackServiceImp {
 		}
 	}//end check winner
 	public boolean open() {
+		System.out.println("-----------------------------------------------");
 		System.out.println(toStringDealer());
 		System.out.println(toStringPlayer());
 		checkWinner();
+		System.out.println("--------------------------------------------------");
+		init();
 		return true;
 		
 	}//end open
 	public boolean decideAI_V1(DealerVO dealerVO) {
+		calculate(dealerVO);
+		calculate(playerVO);
+		if(lastCardIndex<=0) {
+			System.out.println("더이상의 남아있는 카드가 없습니다!!");
+			return false;
+		}
 		if(this.dealerVO.getCardSetValue()>=16) {
 			this.dealerVO.setbShouldHit(false);
 			return false;
@@ -370,6 +386,10 @@ public class BlackJackServiceImp {
 	public boolean decideAI_V2(DealerVO dealerVO) {
 		calculate(dealerVO);
 		calculate(playerVO);
+		if(lastCardIndex<=0) {
+			System.out.println("더이상의 남아있는 카드가 없습니다!!");
+			return false;
+		}
 		if(this.dealerVO.getCardSetValue()>=16) {
 			this.dealerVO.setbShouldHit(false);
 			return false;
@@ -390,6 +410,49 @@ public class BlackJackServiceImp {
 				hit(this.dealerVO);
 				return true;
 			}
+		}
+		return false;
+	}//end
+	public boolean decideAI_V3(DealerVO dealerVO) {
+		calculate(dealerVO);
+		calculate(playerVO);
+		int intLeftOverCard=cardLists.size(); 
+		int intNumOfCardsAtStart=(cardLists.size()-BlackJackVars.maxPlayerNum+1)*2;
+		double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfLost()
+				-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
+		if(lastCardIndex<=0) {
+			System.out.println("더이상의 남아있는 카드가 없습니다!!");
+			return false;
+		}
+		if(this.dealerVO.getCardSetValue()>=16) {
+			this.dealerVO.setbShouldHit(false);
+			return false;
+		}
+		if(this.dealerVO.getCardSetValue()<=11) {
+			hit(this.dealerVO);
+			return true;
+		}
+		int key=this.dealerVO.getCardSetValue();
+		if(key<12 || key >15) {
+			return false;
+		}
+		int _lose=fdlVO.get(key).getLose();
+		int _safe=fdlVO.get(key).getSafe();
+		
+		boolean _bCardVlaueGRT6=false;//딜러의 카드중 7보다 큰 숫자 있냐
+		for(CardVO vo:dealerVO.getCardList1()) {//딜러의 카드 목록중 6보다 큰 숫자 가졌다 확인
+			if(vo.getValue()>6) {
+				_bCardVlaueGRT6=true;
+				break;
+			}
+		}//end GRT6
+		if(key>=15  && _bCardVlaueGRT6==true) {
+			//딜러의 전체 카드값이 15이상이고, 딜러의 카드중 6보다 큰 값이 있을경우
+			_safe=(int)(_safe*dBonus);
+		}
+		if(_safe>=_lose) {//hit 할지말지 결정!!
+			hit(this.dealerVO);
+			return true;
 		}
 		return false;
 	}

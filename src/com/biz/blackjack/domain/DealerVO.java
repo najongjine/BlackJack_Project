@@ -9,6 +9,8 @@ public class DealerVO {
 	private boolean bBust=false;
 	private boolean bShouldHit=true;
 	private List<CardVO> cardList1=null;
+	private int intHunch=0;
+	private int intNumOfLost=0;
 	public DealerVO() {
 		super();
 		// TODO Auto-generated constructor stub
@@ -25,6 +27,18 @@ public class DealerVO {
 		return "DealerVO [name=" + name + ", cardSetValue=" + cardSetValue + ", cardList1=" + cardList1 + "]";
 	}
 	
+	public int getIntHunch() {
+		return intHunch;
+	}
+	public void setIntHunch(int intHunch) {
+		this.intHunch = intHunch;
+	}
+	public int getIntNumOfLost() {
+		return intNumOfLost;
+	}
+	public void setIntNumOfLost(int intNumOfLost) {
+		this.intNumOfLost = intNumOfLost;
+	}
 	public boolean isbShouldHit() {
 		return bShouldHit;
 	}
