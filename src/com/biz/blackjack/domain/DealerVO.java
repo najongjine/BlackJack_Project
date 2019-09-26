@@ -7,6 +7,7 @@ public class DealerVO {
 	private String name="";
 	private int cardSetValue=0;
 	private boolean bBust=false;
+	private int intNumOfBust=0;
 	private boolean bShouldHit=true;
 	private List<CardVO> cardList1=null;
 	private int intHunch=0;
@@ -27,6 +28,12 @@ public class DealerVO {
 		return "DealerVO [name=" + name + ", cardSetValue=" + cardSetValue + ", cardList1=" + cardList1 + "]";
 	}
 	
+	public int getIntNumOfBust() {
+		return intNumOfBust;
+	}
+	public void setIntNumOfBust(int intNumOfBust) {
+		this.intNumOfBust = intNumOfBust;
+	}
 	public int getIntHunch() {
 		return intHunch;
 	}

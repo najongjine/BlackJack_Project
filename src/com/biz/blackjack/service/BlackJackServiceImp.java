@@ -238,6 +238,7 @@ public class BlackJackServiceImp {
 			_value1+=this.dealerVO.getCardList1().get(i).getValue();
 		}
 		this.dealerVO.setCardSetValue(_value1);
+		
 		checkIsBust();
 		
 	}
@@ -289,6 +290,7 @@ public class BlackJackServiceImp {
 		if(dealerVO==null) return false;
 		if(dealerVO.getCardSetValue()>21) {
 			dealerVO.setbBust(true);
+			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()+1);
 			//System.out.printf("%s 는 총 카드 값이 21을 넘어서 지셨습니다.\n",dealerVO.getName());
 			//System.out.printf("%s 의 승리입니다.\n",playerVO.getName());
 			return true;
@@ -418,7 +420,13 @@ public class BlackJackServiceImp {
 		calculate(playerVO);
 		int intLeftOverCard=cardLists.size(); 
 		int intNumOfCardsAtStart=(cardLists.size()-BlackJackVars.maxPlayerNum+1)*2;
-		double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfLost()
+		
+		//요건 패배횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
+		/*double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfLost()
+				-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;*/
+		
+		//요건 bust횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
+		double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfBust()
 				-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
 		if(lastCardIndex<=0) {
 			System.out.println("더이상의 남아있는 카드가 없습니다!!");
@@ -448,6 +456,14 @@ public class BlackJackServiceImp {
 		}//end GRT6
 		if(key>=15  && _bCardVlaueGRT6==true) {
 			//딜러의 전체 카드값이 15이상이고, 딜러의 카드중 6보다 큰 값이 있을경우
+			if(checkIsBust()) {
+				if(this.dealerVO.getIntNumOfBust()<=0) {
+					this.dealerVO.setIntNumOfBust(0);
+				}
+				else{
+					this.dealerVO.setIntNumOfBust(this.dealerVO.getIntNumOfBust()+1);
+				}
+			}
 			_safe=(int)(_safe*dBonus);
 		}
 		if(_safe>=_lose) {//hit 할지말지 결정!!
