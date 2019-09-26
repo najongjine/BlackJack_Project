@@ -157,6 +157,8 @@ public class BlackJackServiceImp {
 		lastCardIndex=cardLists.size()-1;
 		Collections.shuffle(cardLists);
 		
+		
+		System.out.println("\n=================블랙잭 게임을 시작합니다==================");
 		playerVO.setName("Me");
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
@@ -243,7 +245,10 @@ public class BlackJackServiceImp {
 		
 	}
 	public void hit(PlayerVO playerVO) {
-		if(lastCardIndex<=0) return;
+		if(lastCardIndex<0) {
+			System.out.println("더이상 뽑을수 있는 카드가 없습니다!!");
+			return;
+		}
 		
 		this.playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		//cardLists.remove(lastCardIndex--);
@@ -253,7 +258,10 @@ public class BlackJackServiceImp {
 			
 	}//end hit
 	public void hit(PlayerVO playerVO, boolean bVar) {
-		if(lastCardIndex<=0) return;
+		if(lastCardIndex<0) {
+			System.out.println("더이상 뽑을수 있는 카드가 없습니다!!");
+			return;
+		}
 		
 		this.playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		//cardLists.remove(lastCardIndex--);
@@ -265,11 +273,25 @@ public class BlackJackServiceImp {
 			
 	}//end hit
 	public void hit(DealerVO dealerVO) {
-		if(checkIsCardListsEmpty()) return;
+		if(lastCardIndex<0) {
+			System.out.println("더이상 뽑을수 있는 카드가 없습니다!!");
+			return;
+		}
 		
 		this.dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		calculate(this.dealerVO);
 		checkIsBust();
+		
+		int _currentValue=dealerVO.getCardSetValue();
+		int currentCardSize=dealerVO.getCardList1().size();
+		int _previousValue=_currentValue-dealerVO.getCardList1().get(currentCardSize-1).getValue();
+		if(_previousValue>=15 && dealerVO.isbBust()==true) {
+			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()+1);
+		}
+		else if(_previousValue>=15 && dealerVO.isbBust()==false) {
+			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()-1);
+			if(dealerVO.getIntNumOfBust()<0) dealerVO.setIntNumOfBust(0);
+		}
 			
 	}//end hit
 	public boolean checkIsCardListsEmpty() {
@@ -290,7 +312,6 @@ public class BlackJackServiceImp {
 		if(dealerVO==null) return false;
 		if(dealerVO.getCardSetValue()>21) {
 			dealerVO.setbBust(true);
-			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()+1);
 			//System.out.printf("%s 는 총 카드 값이 21을 넘어서 지셨습니다.\n",dealerVO.getName());
 			//System.out.printf("%s 의 승리입니다.\n",playerVO.getName());
 			return true;
@@ -362,7 +383,7 @@ public class BlackJackServiceImp {
 	public boolean decideAI_V1(DealerVO dealerVO) {
 		calculate(dealerVO);
 		calculate(playerVO);
-		if(lastCardIndex<=0) {
+		if(lastCardIndex<0) {
 			System.out.println("더이상의 남아있는 카드가 없습니다!!");
 			return false;
 		}
@@ -388,7 +409,7 @@ public class BlackJackServiceImp {
 	public boolean decideAI_V2(DealerVO dealerVO) {
 		calculate(dealerVO);
 		calculate(playerVO);
-		if(lastCardIndex<=0) {
+		if(lastCardIndex<0) {
 			System.out.println("더이상의 남아있는 카드가 없습니다!!");
 			return false;
 		}
@@ -428,7 +449,7 @@ public class BlackJackServiceImp {
 		//요건 bust횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
 		double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfBust()
 				-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
-		if(lastCardIndex<=0) {
+		if(lastCardIndex<0) {
 			System.out.println("더이상의 남아있는 카드가 없습니다!!");
 			return false;
 		}
