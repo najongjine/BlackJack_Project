@@ -27,7 +27,6 @@ public class BlackJackEx01 {
 			if(turnOfWhichPerson==BlackJackVars.DEALER) {//dealer turn
 				System.out.println();
 				System.out.println("딜러의 턴 입니다.");
-				bs.checkForceHit_Dealer();
 				bs.decideAI_V3(BlackJackServiceImp.getDealerVO());
 				System.out.println("딜러의 턴이 끝났습니다.");
 				System.out.println();

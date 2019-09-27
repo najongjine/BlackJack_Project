@@ -31,20 +31,6 @@ public class BlackJackServiceImp {
 		fdlVO=new TreeMap<Integer, FakeDeepLearningVO>();
 		playerVO=new PlayerVO();
 		dealerVO=new DealerVO();
-		init();
-		FakeDeepLearningService.initFDL();
-		readFDL_Data();
-	}
-	public void init() {
-		playerVO.getCardList1().clear();
-		dealerVO.getCardList1().clear();
-		cardLists.clear();
-		playerVO.setbBust(false);
-		playerVO.setCardSetValue(0);
-		playerVO.setbLose(false);
-		dealerVO.setbBust(false);
-		dealerVO.setbShouldHit(true);
-		dealerVO.setCardSetValue(0);
 		
 		CardVO vo;
 		vo=new CardVO("Spade2", 2);
@@ -154,6 +140,24 @@ public class BlackJackServiceImp {
 		cardLists.add(vo);
 		vo=new CardVO("DiaAce", 1);
 		cardLists.add(vo);
+		init();
+		FakeDeepLearningService.initFDL();
+		readFDL_Data();
+	}
+	public void init() {
+		playerVO.getCardList1().clear();
+		dealerVO.getCardList1().clear();
+		//cardLists.clear();
+		playerVO.setbBust(false);
+		playerVO.setCardSetValue(0);
+		playerVO.setbLose(false);
+		dealerVO.setbBust(false);
+		dealerVO.setbShouldHit(true);
+		dealerVO.setCardSetValue(0);
+		if(dealerVO.getIntLostBCZNumWasLow()<0) dealerVO.setIntLostBCZNumWasLow(0);
+		if(dealerVO.getIntNumOfBust()<0) dealerVO.setIntNumOfBust(0);
+		if(dealerVO.getIntNumOfLost()<0) dealerVO.setIntNumOfLost(0);
+		
 		lastCardIndex=cardLists.size()-1;
 		Collections.shuffle(cardLists);
 		
@@ -163,12 +167,14 @@ public class BlackJackServiceImp {
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		calculate(playerVO);
+		checkIsBust();
 		
 		dealerVO.setName("Dealer");
 		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		dealerVO.getCardList1().add(cardLists.get(lastCardIndex--));
 		calculate(dealerVO);
-		checkForceHit_Dealer();
+		checkIsBust();
+		//checkForceHit_Dealer();
 	}
 	public String toStringPlayer() {
 		String playerInfo=playerVO.getName()+"의 카드[";
@@ -357,6 +363,7 @@ public class BlackJackServiceImp {
 			System.out.printf("%s 의 승 입니다.\n",playerVO.getName());
 			playerVO.setbLose(false);
 			dealerVO.setIntNumOfLost(dealerVO.getIntNumOfLost()+1);
+			if(checkIsValueWasLow(dealerVO)) dealerVO.setIntLostBCZNumWasLow(dealerVO.getIntLostBCZNumWasLow()+1);
 			return;
 		}
 		else if(playerValDiff>dealderVallDiff) {
@@ -364,6 +371,10 @@ public class BlackJackServiceImp {
 			playerVO.setbLose(true);
 			if(dealerVO.getIntNumOfLost()<0) return;
 			dealerVO.setIntNumOfLost(dealerVO.getIntNumOfLost()-1);
+			if(checkIsValueWasLow(dealerVO)) {
+				dealerVO.setIntLostBCZNumWasLow(dealerVO.getIntLostBCZNumWasLow()-1);
+				if(dealerVO.getIntLostBCZNumWasLow()<0) dealerVO.setIntLostBCZNumWasLow(0);
+			}
 			return;
 		}
 		else {
@@ -439,16 +450,18 @@ public class BlackJackServiceImp {
 	public boolean decideAI_V3(DealerVO dealerVO) {
 		calculate(dealerVO);
 		calculate(playerVO);
-		int intLeftOverCard=cardLists.size(); 
-		int intNumOfCardsAtStart=(cardLists.size()-BlackJackVars.maxPlayerNum+1)*2;
+		int intLeftOverCard=lastCardIndex+1;
+		int totalCardSize=cardLists.size();
+		int maxPlayer=BlackJackVars.maxPlayerNum + 1;
+		int intNumOfCardsAtStart=totalCardSize- (maxPlayer*2);
 		
 		//요건 패배횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
-		/*double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfLost()
-				-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;*/
+		double dBonus=(double)(121.0-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfLost()+(dealerVO.getIntLostBCZNumWasLow()*3)//값이 15였을때 stay시 시면 보너스 점수를 올리는데 부스트를 주기위해 *3 함
+				-(15.0-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
 		
-		//요건 bust횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
-		double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfBust()
-				-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
+		//모순발견!! 버스트패널티 내리는 조건을 못찾음!! 요건 bust횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
+		//double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfBust()
+			//	-(15-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
 		if(lastCardIndex<0) {
 			System.out.println("더이상의 남아있는 카드가 없습니다!!");
 			return false;
@@ -458,6 +471,7 @@ public class BlackJackServiceImp {
 			return false;
 		}
 		if(this.dealerVO.getCardSetValue()<=11) {
+			this.dealerVO.setbShouldHit(true);
 			hit(this.dealerVO);
 			return true;
 		}
@@ -488,6 +502,7 @@ public class BlackJackServiceImp {
 			_safe=(int)(_safe*dBonus);
 		}
 		if(_safe>=_lose) {//hit 할지말지 결정!!
+			this.dealerVO.setbShouldHit(true);
 			hit(this.dealerVO);
 			return true;
 		}
@@ -539,5 +554,13 @@ public class BlackJackServiceImp {
 		buffer.close();
 		fr.close();
 		//System.out.println(fdlVO.toString());
+	}
+	public boolean checkIsValueWasLow(DealerVO dealerVO) {
+		calculate(dealerVO);
+		checkIsBust();
+		boolean valueWaslow=dealerVO.getCardSetValue()<16;
+				//&& dealerVO.getIntNumOfLost()>0;
+		//dealerVO.setIntLostBCZNumWasLow(dealerVO.getIntLostBCZNumWasLow()+1);
+		return valueWaslow;
 	}
 }

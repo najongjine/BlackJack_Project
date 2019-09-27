@@ -7,6 +7,8 @@ public class DealerVO {
 	private String name="";
 	private int cardSetValue=0;
 	private boolean bBust=false;
+	private boolean bLostPrevRound=false;
+	int intLostBCZNumWasLow=0;
 	private int intNumOfBust=0;
 	private boolean bShouldHit=true;
 	private List<CardVO> cardList1=null;
@@ -28,6 +30,18 @@ public class DealerVO {
 		return "DealerVO [name=" + name + ", cardSetValue=" + cardSetValue + ", cardList1=" + cardList1 + "]";
 	}
 	
+	public boolean isbLostPrevRound() {
+		return bLostPrevRound;
+	}
+	public void setbLostPrevRound(boolean bLostPrevRound) {
+		this.bLostPrevRound = bLostPrevRound;
+	}
+	public int getIntLostBCZNumWasLow() {
+		return intLostBCZNumWasLow;
+	}
+	public void setIntLostBCZNumWasLow(int intLostBCZNumWasLow) {
+		this.intLostBCZNumWasLow = intLostBCZNumWasLow;
+	}
 	public int getIntNumOfBust() {
 		return intNumOfBust;
 	}
