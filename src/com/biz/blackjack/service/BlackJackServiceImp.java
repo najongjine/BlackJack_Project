@@ -141,14 +141,13 @@ public class BlackJackServiceImp {
 		vo=new CardVO("DiaAce", 1);
 		cardLists.add(vo);
 		init();
-		FakeDeepLearningService.initFDL();
-		readFDL_Data();
+		FakeDeepLearningService.initFDL();//딥러닝 객체 정보들 초기화
+		readFDL_Data();//통계 데이터 읽어드림
 	}
 	public void init() {
-		playerVO.getCardList1().clear();
+		playerVO.getCardList1().clear(); //카드 비우기
 		dealerVO.getCardList1().clear();
-		//cardLists.clear();
-		playerVO.setbBust(false);
+		playerVO.setbBust(false); //상태값 초기화 
 		playerVO.setCardSetValue(0);
 		playerVO.setbLose(false);
 		dealerVO.setbBust(false);
@@ -159,7 +158,9 @@ public class BlackJackServiceImp {
 		if(dealerVO.getIntNumOfLost()<0) dealerVO.setIntNumOfLost(0);
 		
 		lastCardIndex=cardLists.size()-1;
-		Collections.shuffle(cardLists);
+		for(int i=0;i<10;i++) { //10반정도 섞기
+			Collections.shuffle(cardLists);
+		}
 		
 		
 		System.out.println("\n=================블랙잭 게임을 시작합니다==================");
@@ -220,7 +221,7 @@ public class BlackJackServiceImp {
 		BlackJackServiceImp.cardLists = cardLists;
 	}
 	
-	public void calculate(PlayerVO playerVO) {
+	public void calculate(PlayerVO playerVO) { //카드 합 계산
 		int _value1=0;
 		
 		if(this.playerVO.getCardList1().size()<=0) {
@@ -234,7 +235,7 @@ public class BlackJackServiceImp {
 		this.playerVO.setCardSetValue(_value1);
 		checkIsBust();
 	}
-	public void calculate(DealerVO dealerVO) {
+	public void calculate(DealerVO dealerVO) {//카드 합 계산
 		int _value1=0;
 		
 		if(this.dealerVO.getCardList1().size()<=0) {
@@ -257,23 +258,23 @@ public class BlackJackServiceImp {
 		}
 		
 		this.playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
-		//cardLists.remove(lastCardIndex--);
 		calculate(this.playerVO);
 		checkIsBust();
 		//System.out.println(toStringPlayer());
 			
 	}//end hit
-	public void hit(PlayerVO playerVO, boolean bVar) {
+	public void hit(PlayerVO playerVO, boolean bVar) { //이건 딥러닝 시킬때 쓰는 함수. 노멀겜에서 호출하지 마삼 ㅈ 됨.
 		if(lastCardIndex<0) {
 			System.out.println("더이상 뽑을수 있는 카드가 없습니다!!");
 			return;
 		}
 		
 		this.playerVO.getCardList1().add(cardLists.get(lastCardIndex--));
-		//cardLists.remove(lastCardIndex--);
 		calculate(this.playerVO);
 		checkIsBust();
 		int lastIndex=this.playerVO.getCardList1().size()-1;
+		
+		//요게 딥러닝 하게하는 놈.
 		FakeDeepLearningService.processFDPL(this.playerVO.getCardSetValue()-this.playerVO.getCardList1().get(lastIndex).getValue());
 		System.out.println(toStringPlayer());
 			
@@ -291,12 +292,12 @@ public class BlackJackServiceImp {
 		int _currentValue=dealerVO.getCardSetValue();
 		int currentCardSize=dealerVO.getCardList1().size();
 		int _previousValue=_currentValue-dealerVO.getCardList1().get(currentCardSize-1).getValue();
-		if(_previousValue>=15 && dealerVO.isbBust()==true) {
-			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()+1);
+		if(_previousValue>=15 && dealerVO.isbBust()==true) { //hit 하기 전 카드값이 15였고, hit 했는데 bust 났냐?
+			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()+1); // 응 버스트 났음
 		}
 		else if(_previousValue>=15 && dealerVO.isbBust()==false) {
-			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()-1);
-			if(dealerVO.getIntNumOfBust()<0) dealerVO.setIntNumOfBust(0);
+			dealerVO.setIntNumOfBust(dealerVO.getIntNumOfBust()-1); // ㄴㄴ 버스트 안났으니 버스트 count 내려
+			if(dealerVO.getIntNumOfBust()<0) dealerVO.setIntNumOfBust(0);// 0보다 작으면 안되
 		}
 			
 	}//end hit
@@ -328,7 +329,7 @@ public class BlackJackServiceImp {
 	public void stay() {
 		BlackJackVars.intStay++;
 	}//end stay
-	public void checkForceHit_Dealer() {
+	public void checkForceHit_Dealer() { 
 		calculate(dealerVO);
 		calculate(playerVO);
 		if(dealerVO.getCardSetValue()>16) {
@@ -391,7 +392,8 @@ public class BlackJackServiceImp {
 		return true;
 		
 	}//end open
-	public boolean decideAI_V1(DealerVO dealerVO) {
+	
+	public boolean decideAI_V1(DealerVO dealerVO) { //난이도 쉬움
 		calculate(dealerVO);
 		calculate(playerVO);
 		if(lastCardIndex<0) {
@@ -417,7 +419,7 @@ public class BlackJackServiceImp {
 		}
 		return false;
 	}
-	public boolean decideAI_V2(DealerVO dealerVO) {
+	public boolean decideAI_V2(DealerVO dealerVO) { //난이도 어려움
 		calculate(dealerVO);
 		calculate(playerVO);
 		if(lastCardIndex<0) {
@@ -447,9 +449,10 @@ public class BlackJackServiceImp {
 		}
 		return false;
 	}//end
-	public boolean decideAI_V3(DealerVO dealerVO) {
+	public boolean decideAI_V3(DealerVO dealerVO) { //난이도 보통
 		calculate(dealerVO);
 		calculate(playerVO);
+		int key=this.dealerVO.getCardSetValue();
 		int intLeftOverCard=lastCardIndex+1;
 		int totalCardSize=cardLists.size();
 		int maxPlayer=BlackJackVars.maxPlayerNum + 1;
@@ -475,7 +478,7 @@ public class BlackJackServiceImp {
 			hit(this.dealerVO);
 			return true;
 		}
-		int key=this.dealerVO.getCardSetValue();
+		
 		if(key<12 || key >15) {
 			return false;
 		}
@@ -499,7 +502,7 @@ public class BlackJackServiceImp {
 					this.dealerVO.setIntNumOfBust(this.dealerVO.getIntNumOfBust()+1);
 				}
 			}
-			_safe=(int)(_safe*dBonus);
+			_safe=(int)(_safe*dBonus);//보너스 수치 적용
 		}
 		if(_safe>=_lose) {//hit 할지말지 결정!!
 			this.dealerVO.setbShouldHit(true);
@@ -507,8 +510,9 @@ public class BlackJackServiceImp {
 			return true;
 		}
 		return false;
-	}
-	public boolean decideAI_V1(PlayerVO playerVO) {
+	}//end
+	
+	public boolean decideAI_V1(PlayerVO playerVO) {//이건 딥러닝 시킬때 쓰는 함수. 노멀겜에서 호출하지 마삼 ㅈ 됨.
 		calculate(dealerVO);
 		calculate(this.playerVO);
 		if(this.playerVO.getCardSetValue()>16) {
@@ -527,7 +531,7 @@ public class BlackJackServiceImp {
 		}
 		return false;
 	}
-	public boolean cheatAI(DealerVO dealerVO) {
+	public boolean cheatAI(DealerVO dealerVO) { // 난이도 어려움. 딥러닝 시킬때 썼던 함수.
 		if(this.dealerVO.getCardSetValue()>=21) return false;
 		if(this.dealerVO.getCardSetValue()<21) {
 			if(this.dealerVO.getCardSetValue()+cardLists.get(lastCardIndex).getValue()<=21) {
@@ -537,12 +541,12 @@ public class BlackJackServiceImp {
 		}
 		return false;
 	}
-	public void readFDL_Data() throws Exception {
+	public void readFDL_Data() throws Exception { //노멀 겜모드에서 꼭 불러야할 함수. 초기화 하는 곳에서 불러주삼
 		Set<Integer> keys=fdlVO.keySet();
 		FileReader fr=new FileReader(fdlFile);
 		BufferedReader buffer=new BufferedReader(fr);
 		while(true) {
-			String reader=buffer.readLine();
+			String reader=buffer.readLine(); //딥러닝때 나온 통계 데이터 읽어 드리는거임
 			if(reader==null) break;
 			String[] _str=reader.split(":");
 			int _value=Integer.valueOf(_str[0]);
@@ -555,7 +559,7 @@ public class BlackJackServiceImp {
 		fr.close();
 		//System.out.println(fdlVO.toString());
 	}
-	public boolean checkIsValueWasLow(DealerVO dealerVO) {
+	public boolean checkIsValueWasLow(DealerVO dealerVO) { //겜할때 15에서 안전빵 하다가 겜 졌는지 알아보는거임
 		calculate(dealerVO);
 		checkIsBust();
 		boolean valueWaslow=dealerVO.getCardSetValue()<16;
