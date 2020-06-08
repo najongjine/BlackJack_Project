@@ -460,7 +460,7 @@ public class BlackJackServiceImp {
 		
 		//요건 패배횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
 		double dBonus=(double)(121.0-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfLost()+(dealerVO.getIntLostBCZNumWasLow()*3)//값이 15였을때 stay시 시면 보너스 점수를 올리는데 부스트를 주기위해 *3 함
-				-(15.0-dealerVO.getCardSetValue())-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
+				-(dealerVO.getCardSetValue()-15.0)-(intNumOfCardsAtStart-intLeftOverCard))/100.0;
 		
 		//모순발견!! 버스트패널티 내리는 조건을 못찾음!! 요건 bust횟수로 패널티값 부여 + 총 플레이어 인원수 + 남아있는 카드값 + 내가 가진 총 카드값 패널티
 		//double dBonus=(double)(121-BlackJackVars.maxPlayerNum-dealerVO.getIntNumOfBust()
